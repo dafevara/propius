@@ -10,9 +10,10 @@ It's main feature is to allow for extracting similar items over a big data volum
 
 1. The system should find similar items to a particular item in a dataset
 2. The system should provide a dataset format to use for training similarity algorithm
-3. System should generate
 
 ## Performance Estimation
+...
+
 ## System Interface
 
 1. API
@@ -26,3 +27,4 @@ It's main feature is to allow for extracting similar items over a big data volum
 
 ## Components
 
+...
