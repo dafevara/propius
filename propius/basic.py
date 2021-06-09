@@ -13,16 +13,9 @@ item_occurrences = utils.stream_csv(
 sim_model = model.SimilarityModel(
     dictionary,
     item_occurrences,
-    2399055
+    2399055  # num of occurrences must be previously known
 )
 
 sim_model.build()
 df = sim_model.as_dataframe()
-
-storer = model.ModelStorer(
-    sim_model
-)
-# breakpoint()
-storer.prepare()
-storer.populate_correlated_items()
-storer.populate_similar_items()
+sim_model.store_in_db()

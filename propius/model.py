@@ -105,6 +105,8 @@ class SimilarityModel:
     def store_in_db(self):
         storer = ModelStorer(self)
         storer.prepare()
+        storer.populate_correlated_items()
+        storer.populate_similar_items()
 
 
 @dataclass
@@ -152,7 +154,7 @@ class ModelStorer:
 
         conn.close()
 
-    def yield_correlated_items(self):
+    def __yield_correlated_items(self):
         df_item_dict = self.similarity_model.dictionary
         with tqdm(total=df_item_dict.shape[0]) as pb:
             for row in df_item_dict.itertuples():
@@ -166,7 +168,7 @@ class ModelStorer:
 
             cur.executemany(
                 "insert into correlated_items(id, key) values (?, ?)",
-                self.yield_correlated_items()
+                self.__yield_correlated_items()
             )
             conn.commit()
             conn.close()
@@ -190,10 +192,10 @@ class ModelStorer:
 
                 filtered = scaled_similars[scaled_similars[item_id] >= cut_off]
                 filtered = filtered.sort_values(item_id, ascending=False)
-                self.insert_similarities(item_id, filtered)
+                self.__insert_similarities(item_id, filtered)
                 pb.update(1)
 
-    def insert_similarities(self, item_id: int, similars: PandasDataFrame):
+    def __insert_similarities(self, item_id: int, similars: PandasDataFrame):
         condition = np.append(similars['index'].values, item_id)
         if len(condition) <= 1:
             condition = f'({condition[0]})'
