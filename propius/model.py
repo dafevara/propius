@@ -1,4 +1,6 @@
 from typing import Any
+from typing import TypeVar
+
 from dataclasses import dataclass, field
 from tqdm import tqdm
 from scipy.sparse import coo_matrix
@@ -9,22 +11,25 @@ import pandas as pd
 import numpy as np
 import sqlite3 as db
 
+PandasDataFrame = TypeVar('pandas.core.frame.DataFrame')
+SciPyCSRMatrix = TypeVar('sparse.csr.csr_matrix')
+
 
 @dataclass
 class SimilarityModel:
-    dictionary: pd.DataFrame
-    item_occurrences: pd.DataFrame
+    dictionary: PandasDataFrame
+    item_occurrences: PandasDataFrame
     occurrences_size: int
 
-    __df_corr: pd.DataFrame = field(init=False, default=pd.DataFrame())
+    __df_corr: PandasDataFrame = field(init=False, default=pd.DataFrame())
     __csr_matrix: Any = field(init=False)
     __corr_coeffs: Any = field(init=False)
 
-    def __correlation_coefficients(self, A, B=None):
+    def __correlation_coefficients(self, A, B=None) -> np.matrix:
         if B is not None:
             A = sparse.vstack((A, B), format='csr')
 
-        A = A.astype(np.float64)
+        A = A.astype(np.float32)
         n = A.shape[1]
 
         # Compute the covariance matrix
@@ -39,7 +44,7 @@ class SimilarityModel:
 
         return coeffs
 
-    def __crosstab(self):
+    def __crosstab(self) -> SciPyCSRMatrix:
         rows_pos = np.empty(self.occurrences_size, dtype=np.int32)
         col_pos = np.empty(self.occurrences_size, dtype=np.int32)
         data = np.empty(self.occurrences_size, dtype=np.int32)
@@ -76,7 +81,7 @@ class SimilarityModel:
             self.__csr_matrix
         )
 
-    def as_dataframe(self):
+    def as_dataframe(self) -> PandasDataFrame:
         if self.__corr_coeffs is None:
             return
 
@@ -85,13 +90,13 @@ class SimilarityModel:
 
         return self.__df_corr
 
-    def save_csr_matrix(self, output_dir='/tmp'):
+    def save_csr_matrix(self, output_dir='/tmp') -> str:
         file_path = f'{output_dir}/csr_matrix.npz'
         sparse.save_npz(file_path)
 
         return file_path
 
-    def save_correlation_coeffs(self, output_dir='/tmp'):
+    def save_correlation_coeffs(self, output_dir='/tmp') -> str:
         file_path = f'{output_dir}/corr_coeff_matrix.npz'
         sparse.save_npz(file_path)
 
@@ -168,8 +173,6 @@ class ModelStorer:
         except Exception as ex:
             print(ex)
 
-        return None
-
     def populate_similar_items(self):
         scaler = MinMaxScaler()
         df_corr = self.similarity_model.as_dataframe()
@@ -190,7 +193,7 @@ class ModelStorer:
                 self.insert_similarities(item_id, filtered)
                 pb.update(1)
 
-    def insert_similarities(self, item_id, similars):
+    def insert_similarities(self, item_id: int, similars: PandasDataFrame):
         condition = np.append(similars['index'].values, item_id)
         if len(condition) <= 1:
             condition = f'({condition[0]})'
