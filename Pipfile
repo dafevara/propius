@@ -12,6 +12,7 @@ sqlalchemy = "*"
 fsspec = "*"
 s3fs = "*"
 tdqm = "*"
+mkdocs = "*"
 
 [dev-packages]
 ipython = "*"

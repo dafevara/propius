@@ -1,0 +1,19 @@
+site_name: Propius
+repo_name: dafevara/propius
+repo_url: https://github.com/dafevara/propius
+site_url: https://example.com/
+nav:
+- Main: index.md
+extra:
+  search:
+    language: en
+  social:
+  - icon: octicons/mark-github-16
+    link: https://github.com/dafevara
+  - icon: fontawesome/brands/linkedin
+    link: https://www.linkedin.com/in/dafevara
+theme: readthedocs
+plugins:
+- search
+extra_javascript:
+- https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
