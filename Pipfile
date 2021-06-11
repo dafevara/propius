@@ -13,6 +13,11 @@ fsspec = "*"
 s3fs = "*"
 tdqm = "*"
 mkdocs = "*"
+mkdocs-gitbook = "*"
+pygments = "*"
+mkdocs-rtd-dropdown = "*"
+mkdocs-material = "*"
+mkdocstrings = "*"
 
 [dev-packages]
 ipython = "*"
