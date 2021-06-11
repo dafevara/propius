@@ -3,7 +3,14 @@ repo_name: dafevara/propius
 repo_url: https://github.com/dafevara/propius
 site_url: https://example.com/
 nav:
-- Main: index.md
+- Overview: index.md
+- Setup: setup.md
+- Similarity Model: model.md
+- Rest API: rest-api.md
+- API Reference:
+  - SimilarityModel: api/sim-model.md
+  - ModelStorer: api/model-storing.md
+  - Utils: api/utils.md
 extra:
   search:
     language: en
@@ -12,8 +19,13 @@ extra:
     link: https://github.com/dafevara
   - icon: fontawesome/brands/linkedin
     link: https://www.linkedin.com/in/dafevara
-theme: readthedocs
+theme: material
+markdown_extensions:
+- codehilite:
+    guess_lang: false
+    use_pygments: true
+    noclasses: true
+    pygments_style: default
 plugins:
 - search
-extra_javascript:
-- https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML
+- mkdocstrings

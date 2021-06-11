@@ -15,15 +15,30 @@ PandasDataFrame = TypeVar('pandas.core.frame.DataFrame')
 SciPyCSRMatrix = TypeVar('sparse.csr.csr_matrix')
 
 
-@dataclass
 class SimilarityModel:
-    dictionary: PandasDataFrame
-    item_occurrences: PandasDataFrame
-    occurrences_size: int
+    """
+    SimilarityModel is the training interface to extract similar items in a dataset
+    """
 
-    __df_corr: PandasDataFrame = field(init=False, default=pd.DataFrame())
-    __csr_matrix: Any = field(init=False)
-    __corr_coeffs: Any = field(init=False)
+    def __init__(
+        self,
+        dictionary: PandasDataFrame,
+        item_occurrences: PandasDataFrame,
+        occurrences_size: int
+    ):
+        """
+        Arguments:
+            dictionay: a dataframe with all unique items
+            item_occurrences: a dataframe with all item co-occurrences
+            occurrences_size: the size of item_occurrences must be know up front
+                in order to pre-allocate memory space making calculations faster and lighter.
+        """
+        self.dictionary = dictionary
+        self.item_occurrences = item_occurrences
+        self.occurrences_size = occurrences_size
+        self.__df_corr: PandasDataFrame = pd.DataFrame()
+        self.__csr_matrix: SciPyCSRMatrix = None
+        self.__corr_coeffs: PandasDataFrame = pd.DataFrame()
 
     def __correlation_coefficients(self, A, B=None) -> np.matrix:
         if B is not None:
@@ -76,12 +91,22 @@ class SimilarityModel:
         return csr_matrix
 
     def build(self):
+        """
+        Creates a CSR Matrix to represent items co-occurences. Each column is
+        treated as an independent variable, so they can be correlated among each
+        other. Each correlation will be used as the way to define similarity
+        among them.
+        """
         self.__csr_matrix = self.__crosstab()
         self.__corr_coeffs = self.__correlation_coefficients(
             self.__csr_matrix
         )
 
     def as_dataframe(self) -> PandasDataFrame:
+        """
+        Return:
+            Dataframe which stores items correlations
+        """
         if self.__corr_coeffs is None:
             return
 
@@ -91,30 +116,61 @@ class SimilarityModel:
         return self.__df_corr
 
     def save_csr_matrix(self, output_dir='/tmp') -> str:
+        """
+        Saves the CSR Matrix as a npz file in the _output_dir_
+        Arguments:
+            output_dir: npz file destionation dir
+        Return:
+            CSR Matrix file path
+        """
         file_path = f'{output_dir}/csr_matrix.npz'
         sparse.save_npz(file_path)
 
         return file_path
 
     def save_correlation_coeffs(self, output_dir='/tmp') -> str:
+        """
+        Saves correlations dataframe as a npz file in the _output_dir_
+        Arguments:
+            output_dir: npz file destionation dir
+        Return:
+            Correlations dataframe file path
+        """
         file_path = f'{output_dir}/corr_coeff_matrix.npz'
         sparse.save_npz(file_path)
 
         return file_path
 
     def store_in_db(self):
+        """
+        Stores all item correlations (similarities) in a local db (sqlite3).
+        Local db path can be specified in the config file.
+        """
         storer = ModelStorer(self)
         storer.prepare()
         storer.populate_correlated_items()
         storer.populate_similar_items()
 
 
-@dataclass
 class ModelStorer:
-    similarity_model: SimilarityModel
-    __db_path: str = field(default='/tmp/propius.db')
+    """
+    Since Propius allow to extract similar items in big data volumes sometimes
+    it takes several hours and significant amount of memory, disk space and cpu to
+    uncover those similarities when it comes to thousands of different items or millions
+    of different co-occurrences of those thousands of items. So, to avoid investing
+    time and effort each time we need those similarities, Propius provides a interface
+    to store the similarities in a local db (sqlite3) after each training process so
+    the similarities can be retrieved from it.
+    """
+    def __init__(self, similarity_model: SimilarityModel):
+        self.similarity_model = similarity_model
+        self.__db_path: str = '/tmp/propius.db'
 
     def prepare(self):
+        """
+        Prepares tables to store similarities and found correlated items
+        """
+
         conn = db.connect(self.__db_path)
         cur = conn.cursor()
         cur.execute('''
@@ -162,6 +218,9 @@ class ModelStorer:
                 yield (row.Index, row.title,)
 
     def populate_correlated_items(self):
+        """
+        Saves all found correlated items in the _correlated_items_ table.
+        """
         try:
             conn = db.connect(self.__db_path)
             cur = conn.cursor()
@@ -176,6 +235,10 @@ class ModelStorer:
             print(ex)
 
     def populate_similar_items(self):
+        """
+        Saves all similar items per each item which its correlation value is at least
+        `mean + std*2`
+        """
         scaler = MinMaxScaler()
         df_corr = self.similarity_model.as_dataframe()
         with tqdm(total=len(df_corr.index)) as pb:
