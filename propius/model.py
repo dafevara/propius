@@ -221,18 +221,15 @@ class ModelStorer:
         """
         Saves all found correlated items in the _correlated_items_ table.
         """
-        try:
-            conn = db.connect(self.__db_path)
-            cur = conn.cursor()
+        conn = db.connect(self.__db_path)
+        cur = conn.cursor()
 
-            cur.executemany(
-                "insert into correlated_items(id, key) values (?, ?)",
-                self.__yield_correlated_items()
-            )
-            conn.commit()
-            conn.close()
-        except Exception as ex:
-            print(ex)
+        cur.executemany(
+            "insert into correlated_items(id, key) values (?, ?)",
+            self.__yield_correlated_items()
+        )
+        conn.commit()
+        conn.close()
 
     def populate_similar_items(self):
         """
