@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setup(
     name='propius',
     packages=['propius'],
-    version='0.1.1',
+    version='0.1.2',
     license='apache-2.0',
     description='Extracts similar items over a big data using correlation between items over sparse data structures',
     long_description=long_description,
