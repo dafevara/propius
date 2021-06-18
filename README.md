@@ -4,28 +4,10 @@ Propius is latin for *closer*. Propius is a simple tool to uncover similar items
 
 Its main feature is to allow for extracting similar items over a big data volume by using correlation between items over sparse data structures which use less space and memory.
 
-# System Design
+It has two main components. First, the similarity model which is in charge of finding correlations between items based on how they happen together across data. Second, once model training is completed, Propius is able to store similarities so they can be retrieved later via REST API allowing to integrate this to different systems (e.g. recommender systems) transparently.
 
-## Requirements
+# How does it work?
 
+Propius take advantage of [SciPy Sparse Module](https://docs.scipy.org/doc/scipy/reference/sparse.html) to build a correlation coefficients matrix to model similarities between items as distances between vectors in a _i_-dimensional space where _i_ represent an item.
 
-1. The system should find similar items to a particular item in a dataset
-2. The system should provide a dataset format to use for training similarity algorithm
-
-## Performance Estimation
-...
-
-## System Interface
-
-1. API
-	- Allow to query similar items based on a specific item
-	- Allow to query all resources available
-	- Allow to train similarity model for a resource
-
-2. Web Front End
-	- Using system backend api, system show list all resources
-	- Using system backend api, system show create and delete resources
-
-## Components
-
-...
+Using this correlation coefficients matrix Propius is able to calculate kNN per each unique item and store each similarity score in a local db (sqlite) to retrieve similar items without the need to keep the correlation matrix in memory and returning result faster at the same time.
