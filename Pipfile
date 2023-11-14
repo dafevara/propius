@@ -17,9 +17,11 @@ mkdocs-rtd-dropdown = "*"
 mkdocs-material = "*"
 mkdocstrings = "*"
 setuptools = "*"
+mkdocs-autorefs = "*"
+mkdocstrings-python = "*"
 
 [dev-packages]
 ipython = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.11"
