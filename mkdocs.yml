@@ -1,7 +1,7 @@
 site_name: Propius
 repo_name: dafevara/propius
 repo_url: https://github.com/dafevara/propius
-site_url: https://example.com/
+site_url: http://192.168.20.29/
 nav:
 - Overview: index.md
 - Setup: setup.md
